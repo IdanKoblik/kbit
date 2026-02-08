@@ -1,0 +1,32 @@
+#include "decoder.h"
+#include "command_factory.h"
+#include <memory>
+#include <iostream>
+
+static const std::vector<std::string> art = {
+    "----    ---- -----------  --------  ------------",
+    "****   ****  ***********  ********  ************",
+    "----  ----   ----       -   ----    ------------",
+    "*********    ***********    ****        ****    ",
+    "---------    -----------    ----        ----    ",
+    "****  ****   ****       *   ****        ****    ",
+    "----   ----  -----------  --------      ----    ",
+    "****    **** ***********  ********      ****    "
+};
+
+int main(int argc, char** argv) {
+    for (const auto& line : art) 
+        std::cout << line << std::endl;
+    
+    std::cout << "\n";
+    
+    if (argc == 3) {
+        std::unique_ptr<Command> cmd = get_command(argv[1]);
+        if (cmd) {
+            cmd->handle(argv);
+            return 0;
+        }
+    }
+
+    return 0;
+}
