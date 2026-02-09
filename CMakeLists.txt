@@ -33,6 +33,7 @@ FetchContent_MakeAvailable(klogger)
 file(GLOB_RECURSE KBIT_LIB_SOURCES
     src/cmd/*.cpp
     src/parser/*.cpp
+    src/file_handler.cpp
 )
 
 add_library(kbit_lib ${KBIT_LIB_SOURCES})
