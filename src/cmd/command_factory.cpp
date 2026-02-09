@@ -1,6 +1,6 @@
-#include "command_factory.h"
+#include "cmd/command_factory.h"
 
-#include "decode_command.h"
+#include "cmd/decode_command.h"
 
 std::unique_ptr<Command> get_command(const std::string& cmd) {
     if (cmd == "decode")
