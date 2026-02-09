@@ -35,7 +35,7 @@ std::unique_ptr<TorrentFile> parseTorrent(const std::string& path) {
         torrent->trackerURL = asString(asDict(decoded).at("announce"));
 
         return torrent;
-    } catch (const std::exception &e) {
+    } catch (const std::exception& e) {
         LOG_EXCEPTION(e);
         LOG_FATAL("Failed to decode torrent file" + std::string(e.what()));
     }
