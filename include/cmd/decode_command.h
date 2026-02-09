@@ -2,7 +2,7 @@
 #define DECODE_COMMAND
 
 #include "command.h"
-#include "decoder.h"
+#include "parser/decoder.h"
 
 class DecodeCommand : public Command {
 public:
