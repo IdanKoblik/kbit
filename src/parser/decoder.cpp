@@ -71,7 +71,6 @@ static BencodeDict decodeDict(const std::string& str, size_t& pos) {
     pos++; // skip 'd'
     std::map<std::string, BencodeValue> dict;
 
-
     while (str[pos] != 'e') {
         if (pos >= str.size())
             throw std::runtime_error("Unterminated dict");
