@@ -1,10 +1,12 @@
 #include "file_handler.h"
 
 #include "parser/decoder.h"
+#include "parser/encoder.h"
 #include <exception>
 #include <fstream>
 #include <iterator>
 #include <klogger/logger.h>
+#include <openssl/sha.h>
 
 static BencodeDict asDict(const BencodeValue &v) {
     if (!std::holds_alternative<BencodeDict>(v.value)) {
@@ -16,6 +18,13 @@ static BencodeDict asDict(const BencodeValue &v) {
 
 static const std::string &asString(const BencodeValue &v) {
     return std::get<std::string>(v.value);
+}
+
+static std::string sha1Binary(const std::string& data) {
+    unsigned char hash[SHA_DIGEST_LENGTH];
+    SHA1(reinterpret_cast<const unsigned char *>(data.data()), data.size(), hash);
+
+    return std::string(reinterpret_cast<char*>(hash), SHA_DIGEST_LENGTH);
 }
 
 std::unique_ptr<TorrentFile> parseTorrent(const std::string& path) {
@@ -34,6 +43,15 @@ std::unique_ptr<TorrentFile> parseTorrent(const std::string& path) {
         std::unique_ptr<TorrentFile> torrent = std::make_unique<TorrentFile>();
         torrent->trackerURL = asString(asDict(decoded).at("announce"));
 
+        const std::string info = encode(asDict(decoded).at("info"));
+        const std::string infoHash = sha1Binary(info);
+
+        std::ostringstream hexOut;
+        hexOut << std::hex << std::setfill('0');
+        for (unsigned char c : infoHash)
+            hexOut << std::setw(2) << static_cast<int>(c);
+
+        torrent->infoHash = hexOut.str();
         return torrent;
     } catch (const std::exception& e) {
         LOG_EXCEPTION(e);

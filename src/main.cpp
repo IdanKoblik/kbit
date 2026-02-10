@@ -26,8 +26,9 @@ int main(int argc, char** argv) {
 
     if (argc == 2) {
         std::unique_ptr<TorrentFile> file = parseTorrent(argv[1]);
-        std::string test = file->trackerURL;
-        printf("%s", test.c_str());
+        printf("%s\n", (file->trackerURL).c_str());
+        printf("%s\n", (file->infoHash).c_str());
+
         return 0;
     }
 

@@ -1,9 +1,11 @@
 cmake_minimum_required(VERSION 3.20)
-project(kbit VERSION 0.1.0 LANGUAGES CXX)
+project(kbit LANGUAGES CXX)
 
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_CXX_EXTENSIONS OFF)
+
+find_package(OpenSSL REQUIRED)
 
 option(ENABLE_COVERAGE "Enable code coverage" OFF)
 enable_testing()
@@ -39,11 +41,12 @@ file(GLOB_RECURSE KBIT_LIB_SOURCES
 add_library(kbit_lib ${KBIT_LIB_SOURCES})
 target_include_directories(kbit_lib
     PUBLIC
-        ${PROJECT_SOURCE_DIR}/include
+    ${PROJECT_SOURCE_DIR}/include
 )
 target_link_libraries(kbit_lib
     PUBLIC
-        klogger::klogger
+    klogger::klogger
+    OpenSSL::Crypto
 )
 target_compile_options(kbit_lib
     PRIVATE -Wall -Wextra -Wpedantic
@@ -56,10 +59,10 @@ file(GLOB_RECURSE KBIT_TEST_SOURCES tests/*.cpp)
 add_executable(kbit_tests ${KBIT_TEST_SOURCES})
 target_link_libraries(kbit_tests
     PRIVATE
-        kbit_lib
-        GTest::gtest
-        GTest::gtest_main
-        GTest::gmock
+    kbit_lib
+    GTest::gtest
+    GTest::gtest_main
+    GTest::gmock
 )
 include(GoogleTest)
 gtest_discover_tests(kbit_tests)

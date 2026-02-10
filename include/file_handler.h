@@ -7,6 +7,7 @@
 
 struct TorrentFile {
     std::string trackerURL{};
+    std::string infoHash{};
 };
 
 std::unique_ptr<TorrentFile> parseTorrent(const std::string& path);
