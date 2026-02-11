@@ -17,7 +17,6 @@ public:
             return false;
         }
 
-
         size_t pos = 0;
         try {
             BencodeValue decoded = decode(argv[2], pos);

@@ -1,10 +1,9 @@
 #ifndef PARSE_COMMAND
 #define PARSE_COMMAND
 
-#include <fstream>
 #include <klogger/logger.h>
 #include "command.h"
-#include "parser/decoder.h"
+#include "file_handler.h"
 
 class ParseCommand : public Command {
 public:
@@ -18,18 +17,11 @@ public:
           return false;
       }
 
-      std::ifstream file(argv[2], std::ios::binary);
-      if (!file) {
-          LOG_ERROR("Target file was not found");
-          return false;
-      }
-
-      std::string data = std::string(std::istreambuf_iterator<char>(file), std::istreambuf_iterator<char>());
-      size_t pos = 0;
-
       try {
-          BencodeValue decoded = decode(data, pos);
-          print_bencode(decoded, 0);
+          std::unique_ptr<TorrentFile> torrent = parseTorrent(argv[2]);
+          std::cout << torrent->trackerURL << std::endl;
+          std::cout << torrent->infoHash << std::endl;
+
           return true;
       } catch (const std::exception& e) {
           LOG_EXCEPTION(e);

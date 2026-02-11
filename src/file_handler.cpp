@@ -7,16 +7,23 @@
 #include <iterator>
 #include <klogger/logger.h>
 #include <openssl/sha.h>
+#include <iostream>
 
-static BencodeDict asDict(const BencodeValue &v) {
-    if (!std::holds_alternative<BencodeDict>(v.value)) {
+static BencodeDict asDict(const BencodeValue& v) {
+    if (!std::holds_alternative<BencodeDict>(v.value))
         throw std::runtime_error("BencodeValue is not a dictionary!");
-    }
 
     return std::get<BencodeDict>(v.value);
 }
 
-static const std::string &asString(const BencodeValue &v) {
+static BencodeList asList(const BencodeValue& v) {
+    if (!std::holds_alternative<BencodeList>(v.value))
+        throw std::runtime_error("BencodeValue is not a list!");
+
+    return std::get<BencodeList>(v.value);
+}
+
+static const std::string& asString(const BencodeValue& v) {
     return std::get<std::string>(v.value);
 }
 
@@ -39,19 +46,35 @@ std::unique_ptr<TorrentFile> parseTorrent(const std::string& path) {
 
     try {
         BencodeValue decoded = decode(data, pos);
+        const BencodeDict root = asDict(decoded);
+        const BencodeDict infoDict = asDict(root.at("info"));
 
         std::unique_ptr<TorrentFile> torrent = std::make_unique<TorrentFile>();
-        torrent->trackerURL = asString(asDict(decoded).at("announce"));
+        torrent->trackerURL = asString(root.at("announce"));
 
-        const std::string info = encode(asDict(decoded).at("info"));
-        const std::string infoHash = sha1Binary(info);
-
+        const std::string infoEncoded = encode(infoDict);
+        const std::string infoHash = sha1Binary(infoEncoded);
         std::ostringstream hexOut;
         hexOut << std::hex << std::setfill('0');
         for (unsigned char c : infoHash)
             hexOut << std::setw(2) << static_cast<int>(c);
 
         torrent->infoHash = hexOut.str();
+
+        const std::string& piecesStr = asString(infoDict.at("pieces"));
+        if (piecesStr.size() % SHA_DIGEST_LENGTH != 0)
+            throw std::runtime_error("Invalid pieces length in torrent file");
+
+        torrent->hashes.reserve(piecesStr.size() / SHA_DIGEST_LENGTH);
+        for (size_t i = 0; i < piecesStr.size(); i += SHA_DIGEST_LENGTH) {
+            const std::string piece = piecesStr.substr(i, SHA_DIGEST_LENGTH);
+            std::ostringstream pieceHex;
+            pieceHex << std::hex << std::setfill('0');
+            for (unsigned char c : piece)
+                pieceHex << std::setw(2) << static_cast<int>(c);
+            torrent->hashes.push_back(pieceHex.str());
+        }
+
         return torrent;
     } catch (const std::exception& e) {
         LOG_EXCEPTION(e);
