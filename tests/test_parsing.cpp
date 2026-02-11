@@ -1,6 +1,8 @@
 #include <gtest/gtest.h>
 
+#include "parser/bencode.h"
 #include "parser/decoder.h"
+#include "parser/encoder.h"
 
 static long long asInt(const BencodeValue& v) {
     return std::get<long long>(v.value);
@@ -18,23 +20,29 @@ static const BencodeDict& asDict(const BencodeValue& v) {
     return std::get<BencodeDict>(v.value);
 }
 
-TEST(DecoderTest, Integer) {
+TEST(ParserTest, Integer) {
     size_t pos = 0;
     BencodeValue v = decode("i42e", pos);
 
     EXPECT_EQ(asInt(v), 42);
     EXPECT_EQ(pos, 4);
+
+    std::string encoded = encode(v);
+    EXPECT_EQ(encoded, "i42e");
 }
 
-TEST(DecoderTest, String) {
+TEST(ParserTest, String) {
     size_t pos = 0;
     BencodeValue v = decode("4:spam", pos);
 
     EXPECT_EQ(asString(v), "spam");
     EXPECT_EQ(pos, 6);
+
+    std::string encoded = encode(v);
+    EXPECT_EQ(encoded, "4:spam");
 }
 
-TEST(DecoderTest, List) {
+TEST(ParserTest, List) {
     size_t pos = 0;
     BencodeValue v = decode("li1e3:abce", pos);
 
@@ -42,15 +50,21 @@ TEST(DecoderTest, List) {
     ASSERT_EQ(list.size(), 2u);
     EXPECT_EQ(asInt(list[0]), 1);
     EXPECT_EQ(asString(list[1]), "abc");
+
+    std::string encoded = encode(v);
+    EXPECT_EQ(encoded, "li1e3:abce");
 }
 
-TEST(DecoderTest, Dictionary) {
+TEST(ParserTest, Dictionary) {
     size_t pos = 0;
     BencodeValue v = decode("d3:cow3:moo4:spam4:eggse", pos);
 
     const auto& dict = asDict(v);
     EXPECT_EQ(asString(dict.at("cow")), "moo");
     EXPECT_EQ(asString(dict.at("spam")), "eggs");
+
+    std::string encoded = encode(v);
+    EXPECT_EQ(encoded, "d3:cow3:moo4:spam4:eggse");
 }
 
 TEST(DecoderTest, NestedStructures) {
@@ -66,4 +80,7 @@ TEST(DecoderTest, NestedStructures) {
     EXPECT_EQ(asInt(list[2]), 3);
 
     EXPECT_EQ(asInt(dict.at("num")), 99);
+
+    std::string encoded = encode(v);
+    EXPECT_EQ(encoded, "d4:listli1ei2ei3ee3:numi99ee");
 }

@@ -1,0 +1,59 @@
+{
+  "tests": 7,
+  "name": "AllTests",
+  "testsuites": [
+    {
+      "name": "HandleFile",
+      "tests": 2,
+      "testsuite": [
+        {
+          "name": "UnknownFile",
+          "file": "\/home\/idan\/projects\/personal\/kbit\/tests\/test_file_handler.cpp",
+          "line": 7
+        },
+        {
+          "name": "ValidFile",
+          "file": "\/home\/idan\/projects\/personal\/kbit\/tests\/test_file_handler.cpp",
+          "line": 12
+        }
+      ]
+    },
+    {
+      "name": "ParserTest",
+      "tests": 4,
+      "testsuite": [
+        {
+          "name": "Integer",
+          "file": "\/home\/idan\/projects\/personal\/kbit\/tests\/test_parsing.cpp",
+          "line": 23
+        },
+        {
+          "name": "String",
+          "file": "\/home\/idan\/projects\/personal\/kbit\/tests\/test_parsing.cpp",
+          "line": 34
+        },
+        {
+          "name": "List",
+          "file": "\/home\/idan\/projects\/personal\/kbit\/tests\/test_parsing.cpp",
+          "line": 45
+        },
+        {
+          "name": "Dictionary",
+          "file": "\/home\/idan\/projects\/personal\/kbit\/tests\/test_parsing.cpp",
+          "line": 58
+        }
+      ]
+    },
+    {
+      "name": "DecoderTest",
+      "tests": 1,
+      "testsuite": [
+        {
+          "name": "NestedStructures",
+          "file": "\/home\/idan\/projects\/personal\/kbit\/tests\/test_parsing.cpp",
+          "line": 70
+        }
+      ]
+    }
+  ]
+}

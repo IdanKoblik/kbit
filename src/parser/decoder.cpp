@@ -69,8 +69,7 @@ static BencodeDict decodeDict(const std::string& str, size_t& pos) {
         throw std::runtime_error("Invalid map start");
 
     pos++; // skip 'd'
-    std::unordered_map<std::string, BencodeValue> dict;
-
+    std::map<std::string, BencodeValue> dict;
 
     while (str[pos] != 'e') {
         if (pos >= str.size())

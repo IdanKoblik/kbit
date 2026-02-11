@@ -1,4 +1,5 @@
 #include "cmd/command_factory.h"
+#include "file_handler.h"
 #include <memory>
 #include <iostream>
 #include <vector>
@@ -19,7 +20,6 @@ int main(int argc, char** argv) {
         std::cout << line << std::endl;
 
     std::cout << "\n";
-
     if (argc == 3) {
         std::unique_ptr<Command> cmd = get_command(argv[1]);
         if (cmd) {
