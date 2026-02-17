@@ -21,6 +21,7 @@ public:
           std::unique_ptr<TorrentFile> torrent = parseTorrent(argv[2]);
           std::cout << torrent->trackerURL << std::endl;
           std::cout << torrent->infoHash << std::endl;
+          std::cout << (torrent->isPrivate ? "Private" : "Public") << std::endl;
 
           return true;
       } catch (const std::exception& e) {

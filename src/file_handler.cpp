@@ -8,6 +8,7 @@
 #include <klogger/logger.h>
 #include <openssl/sha.h>
 #include <iostream>
+#include <optional>
 
 static BencodeDict asDict(const BencodeValue& v) {
     if (!std::holds_alternative<BencodeDict>(v.value))
@@ -25,6 +26,10 @@ static BencodeList asList(const BencodeValue& v) {
 
 static const std::string& asString(const BencodeValue& v) {
     return std::get<std::string>(v.value);
+}
+
+static long long asInt(const BencodeValue& v) {
+    return std::get<long long>(v.value);
 }
 
 static std::string sha1Binary(const std::string& data) {
@@ -51,6 +56,11 @@ std::unique_ptr<TorrentFile> parseTorrent(const std::string& path) {
 
         std::unique_ptr<TorrentFile> torrent = std::make_unique<TorrentFile>();
         torrent->trackerURL = asString(root.at("announce"));
+
+        std::optional<long long> privateFlag;
+        if (infoDict.find("private") != infoDict.end())
+            privateFlag = asInt(infoDict.at("private"));
+        torrent->isPrivate = privateFlag.has_value() && privateFlag.value() == 1;
 
         const std::string infoEncoded = encode(infoDict);
         const std::string infoHash = sha1Binary(infoEncoded);

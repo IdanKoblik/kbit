@@ -9,6 +9,7 @@
 struct TorrentFile {
     std::string trackerURL{};
     std::string infoHash{};
+    bool isPrivate{false};
 
     std::vector<std::string> hashes;
 };
