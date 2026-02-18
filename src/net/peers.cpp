@@ -25,9 +25,6 @@ static std::string urlEncode(const std::string& data) {
 namespace net {
 
 void discover(const std::string& trackerURL, TorrentFile& torrent) {
-    if (trackerURL.rfind("http://", 0) != 0)
-        return;
-
     std::string url = trackerURL.substr(7);
     size_t slashPos = url.find('/');
     std::string hostPort = url.substr(0, slashPos);
@@ -47,10 +44,10 @@ void discover(const std::string& trackerURL, TorrentFile& torrent) {
     }
 
     net::ConnectionInfo info = net::resolve(host, port);
-
-    net::TcpWrapper tcp;
-    if (!tcp.connect(info)) {
-        LOG_ERROR("Failed to connect to tracker " + trackerURL);
+    bool isHttps = (trackerURL.compare(0, 8, "https://") == 0);
+    net::TcpWrapper* tcp = new net::TcpWrapper(isHttps);
+    if (!tcp->connect(info)) {
+        LOG_WARN("Failed to connect to tracker " + trackerURL);
         return;
     }
 
@@ -65,10 +62,16 @@ void discover(const std::string& trackerURL, TorrentFile& torrent) {
         "&left=" + std::to_string(torrent.length) +
         "&compact=1";
 
-    std::string response  = tcp.getRequest(request);
+    std::string response = tcp->getRequest(request);
+    if (response.find("HTTP/1.1 200 OK") == std::string::npos) {
+        LOG_WARN("Tracker returned non-200 response");
+        return;
+    }
+
     size_t bodyPos = response.find("\r\n\r\n");
     if (bodyPos == std::string::npos)
         return;
+
     std::string body = response.substr(bodyPos + 4);
 
     size_t pos = 0;

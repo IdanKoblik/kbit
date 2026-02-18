@@ -79,7 +79,7 @@ std::unique_ptr<TorrentFile> parseTorrent(const std::string& path) {
             for (const BencodeValue& tier : asList(it->second)) {
                 for (const BencodeValue& tracker : asList(tier)) {
                     const std::string& url = asString(tracker);
-                    if (url.rfind("http://", 0) == 0)
+                    if (url.rfind("http://", 0) == 0 || url.rfind("https://", 0) == 0)
                        net::discover(url, *torrent);
                 }
             }
