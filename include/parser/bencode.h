@@ -28,5 +28,12 @@ struct BencodeValue {
     BencodeValue(T&& v) : value(std::forward<T>(v)) {}
 };
 
+BencodeDict asDict(const BencodeValue& v);
+
+BencodeList asList(const BencodeValue& v);
+
+const std::string& asString(const BencodeValue& v);
+
+long long asInt(const BencodeValue& v);
 
 #endif // BENCODE_H

@@ -34,6 +34,7 @@ FetchContent_MakeAvailable(klogger)
 
 file(GLOB_RECURSE KBIT_LIB_SOURCES
     src/cmd/*.cpp
+    src/net/*.cpp
     src/parser/*.cpp
     src/file_handler.cpp
 )
@@ -47,6 +48,7 @@ target_link_libraries(kbit_lib
     PUBLIC
     klogger::klogger
     OpenSSL::Crypto
+    OpenSSL::SSL
 )
 target_compile_options(kbit_lib
     PRIVATE -Wall -Wextra -Wpedantic
