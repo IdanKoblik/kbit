@@ -20,8 +20,17 @@ public:
       try {
           std::unique_ptr<TorrentFile> torrent = parseTorrent(argv[2]);
           std::cout << torrent->trackerURL << std::endl;
-          std::cout << torrent->infoHash << std::endl;
           std::cout << (torrent->isPrivate ? "Private" : "Public") << std::endl;
+          std::cout << "Len: " + std::to_string(torrent->length) << std::endl;
+
+          std::ostringstream hexOut;
+          hexOut << std::hex << std::setfill('0');
+          for (unsigned char c : torrent->infoHash)
+              hexOut << std::setw(2) << static_cast<int>(c);
+
+          std::cout << "Info Hash: " << hexOut.str() << std::endl;
+          for (const auto& peer : torrent->peers)
+              std::cout << "Peer: " << peer.host << ":" << peer.port << std::endl;
 
           return true;
       } catch (const std::exception& e) {

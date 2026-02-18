@@ -4,22 +4,6 @@
 #include "parser/decoder.h"
 #include "parser/encoder.h"
 
-static long long asInt(const BencodeValue& v) {
-    return std::get<long long>(v.value);
-}
-
-static const std::string& asString(const BencodeValue& v) {
-    return std::get<std::string>(v.value);
-}
-
-static const BencodeList& asList(const BencodeValue& v) {
-    return std::get<BencodeList>(v.value);
-}
-
-static const BencodeDict& asDict(const BencodeValue& v) {
-    return std::get<BencodeDict>(v.value);
-}
-
 TEST(ParserTest, Integer) {
     size_t pos = 0;
     BencodeValue v = decode("i42e", pos);

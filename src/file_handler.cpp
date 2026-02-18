@@ -1,36 +1,16 @@
 #include "file_handler.h"
 
+#include "net/peers.h"
+#include "parser/bencode.h"
 #include "parser/decoder.h"
 #include "parser/encoder.h"
 #include <exception>
 #include <fstream>
 #include <iterator>
 #include <klogger/logger.h>
+#include <memory>
 #include <openssl/sha.h>
 #include <iostream>
-#include <optional>
-
-static BencodeDict asDict(const BencodeValue& v) {
-    if (!std::holds_alternative<BencodeDict>(v.value))
-        throw std::runtime_error("BencodeValue is not a dictionary!");
-
-    return std::get<BencodeDict>(v.value);
-}
-
-static BencodeList asList(const BencodeValue& v) {
-    if (!std::holds_alternative<BencodeList>(v.value))
-        throw std::runtime_error("BencodeValue is not a list!");
-
-    return std::get<BencodeList>(v.value);
-}
-
-static const std::string& asString(const BencodeValue& v) {
-    return std::get<std::string>(v.value);
-}
-
-static long long asInt(const BencodeValue& v) {
-    return std::get<long long>(v.value);
-}
 
 static std::string sha1Binary(const std::string& data) {
     unsigned char hash[SHA_DIGEST_LENGTH];
@@ -55,34 +35,54 @@ std::unique_ptr<TorrentFile> parseTorrent(const std::string& path) {
         const BencodeDict infoDict = asDict(root.at("info"));
 
         std::unique_ptr<TorrentFile> torrent = std::make_unique<TorrentFile>();
-        torrent->trackerURL = asString(root.at("announce"));
 
-        std::optional<long long> privateFlag;
-        if (infoDict.find("private") != infoDict.end())
-            privateFlag = asInt(infoDict.at("private"));
-        torrent->isPrivate = privateFlag.has_value() && privateFlag.value() == 1;
+        torrent->trackerURL = asString(root.at("announce"));
+        auto lenIt = infoDict.find("length");
+        if (lenIt != infoDict.end()) {
+            // Single file mode
+            torrent->length = asInt(lenIt->second);
+        } else {
+            // Multi-file mode
+            auto filesIt = infoDict.find("files");
+            if (filesIt == infoDict.end())
+                throw std::runtime_error("Torrent missing length and files");
+
+            const BencodeList& files = asList(filesIt->second);
+
+            torrent->length = 0;
+
+            for (const BencodeValue& file : files) {
+                const BencodeDict& fileDict = asDict(file);
+                torrent->length += asInt(fileDict.at("length"));
+            }
+        }
+
+        auto pit = infoDict.find("private");
+        torrent->isPrivate =
+            (pit != infoDict.end() && asInt(pit->second) == 1);
 
         const std::string infoEncoded = encode(infoDict);
-        const std::string infoHash = sha1Binary(infoEncoded);
-        std::ostringstream hexOut;
-        hexOut << std::hex << std::setfill('0');
-        for (unsigned char c : infoHash)
-            hexOut << std::setw(2) << static_cast<int>(c);
-
-        torrent->infoHash = hexOut.str();
+        torrent->infoHash = sha1Binary(infoEncoded); // RAW 20 bytes
 
         const std::string& piecesStr = asString(infoDict.at("pieces"));
         if (piecesStr.size() % SHA_DIGEST_LENGTH != 0)
-            throw std::runtime_error("Invalid pieces length in torrent file");
+            throw std::runtime_error("Invalid pieces length");
 
-        torrent->hashes.reserve(piecesStr.size() / SHA_DIGEST_LENGTH);
         for (size_t i = 0; i < piecesStr.size(); i += SHA_DIGEST_LENGTH) {
-            const std::string piece = piecesStr.substr(i, SHA_DIGEST_LENGTH);
-            std::ostringstream pieceHex;
-            pieceHex << std::hex << std::setfill('0');
-            for (unsigned char c : piece)
-                pieceHex << std::setw(2) << static_cast<int>(c);
-            torrent->hashes.push_back(pieceHex.str());
+            torrent->hashes.push_back(
+                piecesStr.substr(i, SHA_DIGEST_LENGTH)
+            );
+        }
+
+        auto it = root.find("announce-list");
+        if (it != root.end()) {
+            for (const BencodeValue& tier : asList(it->second)) {
+                for (const BencodeValue& tracker : asList(tier)) {
+                    const std::string& url = asString(tracker);
+                    if (url.rfind("http://", 0) == 0)
+                       net::discover(url, *torrent);
+                }
+            }
         }
 
         return torrent;

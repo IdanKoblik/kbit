@@ -17,6 +17,38 @@
 #include <openssl/x509v3.h>
 
 namespace net {
+    ConnectionInfo parseAddress(const std::string& address) {
+        ConnectionInfo info{};
+
+        if (address.empty())
+            throw std::invalid_argument("Empty address string");
+
+        if (address[0] == '[') {
+            auto closing = address.find(']');
+            if (closing == std::string::npos)
+                throw std::invalid_argument("Invalid IPv6 address format");
+
+            info.host = address.substr(1, closing - 1);
+            if (closing + 1 >= address.size() || address[closing + 1] != ':')
+                throw std::invalid_argument("Missing port after IPv6 address");
+
+            info.port = static_cast<uint16_t>(
+                std::stoul(address.substr(closing + 2))
+            );
+        } else {
+            auto colon = address.rfind(':');
+            if (colon == std::string::npos)
+                throw std::invalid_argument("Missing port in address");
+
+            info.host = address.substr(0, colon);
+            info.port = static_cast<uint16_t>(
+                std::stoul(address.substr(colon + 1))
+            );
+        }
+
+        return info;
+    }
+    
     ConnectionInfo resolve(const std::string& host, uint16_t port) {
         struct addrinfo hints{}, *res;
         std::memset(&hints, 0, sizeof(hints));
